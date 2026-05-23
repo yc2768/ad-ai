@@ -1,0 +1,40 @@
+from functools import lru_cache
+from pathlib import Path
+
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=PROJECT_ROOT / ".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+    app_name: str = "ad-ai"
+    app_version: str = "0.1.0"
+    debug: bool = False
+
+    host: str = "0.0.0.0"
+    port: int = 8000
+
+    log_level: str = "INFO"
+    log_dir: Path = Field(default=PROJECT_ROOT / "logs")
+    log_max_bytes: int = 10 * 1024 * 1024
+    log_backup_count: int = 5
+
+    # 火山方舟 / 豆包
+    ark_api_key: str | None = None
+    ark_base_url: str = "https://ark.cn-beijing.volces.com"
+    ark_default_model: str = "doubao-seed-2-0-lite-260428"
+
+
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()
+
+
+settings = get_settings()
