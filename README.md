@@ -1,6 +1,25 @@
 # ad-ai
 
-广告公司 AI 文案服务。API 只做转发，业务逻辑集中在 `services/`。
+广告公司 AI 提效小工具：**文案 · 图片 · 视频**，一套 API 打通火山方舟豆包 / Seedream / Seedance。接口层薄，业务在 `services/`。
+
+---
+
+## 公众号教程 · 码农的 AI 备忘录（建议先看再 Star ⭐）
+
+GitHub 上的代码是「能跑的」；**码农的 AI 备忘录** 上是「能看懂的」——三篇连载，分别讲 **文本、图片、视频** 怎么对接火山方舟。
+
+微信搜 **「码农的 AI 备忘录」** 关注，连载不迷路（直接点下面链接看文也行 👇）
+
+| 篇目 | 你会学到什么 |
+|------|----------------|
+| [（一）文本对接 · 广告文案](https://mp.weixin.qq.com/s/UTFnjmWANuZF2CmsItN49A) | 豆包 `ARK_TEXT_MODEL`、`/api/v1/ad/copy`、Brief 怎么写、公众号种草文怎么出 |
+| [（二）图片对接 · Seedream 5.0 lite](https://mp.weixin.qq.com/s/El8_eV3wYCW-OPungbt7ng) | 文生图 / 图生图 / 多图融合 / 组图，`ARK_IMAGE_MODEL` 与 Swagger 示例 |
+| [（三）视频对接 · Seedance 2.0](https://mp.weixin.qq.com/s/qRZhqp3T2dO7Q2CHvvBFhA) | 文本+视频+图片商品替换、异步 `task_id` 轮询、`ARK_VIDEO_MODEL` 配置 |
+
+> 觉得仓库有用：**Star 一下**，下次 `git pull` 不迷路。  
+> 想听人话版更新：关注 **码农的 AI 备忘录**，比读 commit message 快乐。
+
+---
 
 ## 目录结构
 
@@ -29,6 +48,7 @@ app/
 | `prompts`   | 广告领域系统提示词（LangChain `ChatPromptTemplate`） |
 | `doubao`    | 方舟对话 API，仅供 Service 依赖                  |
 | `seedream`  | 方舟图片生成 API（Seedream 5.0 lite）            |
+| `seedance`  | 方舟视频生成 API（Seedance 2.0）                 |
 
 
 ## 环境变量
