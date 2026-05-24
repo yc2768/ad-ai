@@ -11,8 +11,10 @@ app/
 ├── services/
 │   ├── doubao.py         # 豆包对话底层（内部）
 │   ├── seedream.py       # Seedream 图片生成底层（内部）
+│   ├── seedance.py       # Seedance 视频生成底层（内部）
 │   ├── ad_copy.py        # 广告文案业务
-│   └── ad_image.py       # 广告图片提效
+│   ├── ad_image.py       # 广告图片提效
+│   └── ad_video.py       # 广告视频提效
 ├── prompts/              # LangChain 提示词模板
 └── core/                 # 配置、日志
 ```
@@ -38,14 +40,14 @@ ARK_BASE_URL=https://ark.cn-beijing.volces.com
 # 按能力分模型（控制台推理接入点 ID）
 ARK_TEXT_MODEL=doubao-seed-2-0-lite-260428      # 文案 / 对话
 ARK_IMAGE_MODEL=doubao-seedream-5-0-260128     # 图片 Seedream 5.0 lite
-ARK_VIDEO_MODEL=doubao-seedance-1-5-pro-251215 # 视频 Seedance（接口预留）
+ARK_VIDEO_MODEL=doubao-seedance-2-0-260128     # 视频 Seedance 2.0
 ```
 
 | 变量 | 用途 | 默认模型系列 |
 |------|------|----------------|
 | `ARK_TEXT_MODEL` | 广告文案、对话 | 豆包 Seed 文本 |
 | `ARK_IMAGE_MODEL` | 广告主图、组图、图生图 | Seedream 5.0 lite |
-| `ARK_VIDEO_MODEL` | 广告短视频（预留） | Seedance |
+| `ARK_VIDEO_MODEL` | 广告短视频、商品替换 | Seedance 2.0 |
 
 图片能力见 [Seedream 5.0 lite API](https://www.volcengine.com/docs/82379/1541523?lang=zh)；三类能力共用 `ARK_API_KEY`。
 
@@ -162,6 +164,31 @@ uv run python main.py
 ```
 
 生成 URL 约 **24 小时**有效，请及时落库或转存 CDN。调试会产生真实计费，见[官方文档](https://www.volcengine.com/docs/82379/1541523?lang=zh)。
+
+### 广告视频生成（Seedance 2.0）
+
+`POST /api/v1/ad/video` · `GET /api/v1/ad/video/{task_id}` · Swagger 可切换「商品替换 · 项链换品」示例
+
+多模态参考：**文本 + 参考视频 + 参考图**，用于电商「换品不换镜」——保持原片运镜，替换为新品图。见[创建视频生成任务 API](https://www.volcengine.com/docs/82379/1520757?lang=zh)。
+
+**注意**：单段参考视频须 **2–15 秒**；过长会返回 400。参考图经服务端转 base64 上传，避免 CDN 403。
+
+```json
+POST /api/v1/ad/video
+{
+  "mode": "product_replace",
+  "prompt": "将视频1中的商品替换成图片1中的粉色独角兽项链，运镜、镜头运动、节奏完全不变",
+  "video_url": "https://.../product.mp4",
+  "image_url": "https://.../necklace.png",
+  "duration": 5,
+  "ratio": "1:1",
+  "resolution": "720p"
+}
+```
+
+立即返回 `task_id`，再用 `GET /api/v1/ad/video/{task_id}` 轮询至 `status=succeeded`。成片 `video_url` 约 **24 小时**有效。
+
+---
 
 响应直接返回文案数组：
 

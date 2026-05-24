@@ -41,7 +41,7 @@ class Settings(BaseSettings):
     ark_base_url: str = "https://ark.cn-beijing.volces.com"
     ark_text_model: str = "doubao-seed-2-0-lite-260428"
     ark_image_model: str = "doubao-seedream-5-0-260128"
-    ark_video_model: str = "doubao-seedance-1-5-pro-251215"
+    ark_video_model: str = "doubao-seedance-2-0-260128"
 
 
 @lru_cache
