@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from app.api.deps import get_doubao_service
+from app.api.deps import get_doubao_service, get_seedream_service
 from app.api.v1 import api_router
 from app.core.config import settings
 from app.core.exceptions import unhandled_exception_handler
@@ -17,8 +17,13 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     setup_logging()
     logger.info("application starting | %s v%s", settings.app_name, settings.app_version)
+    logger.info("API docs  | %s/api/docs", settings.base_url)
+    logger.info("Health    | %s/api/v1/health", settings.base_url)
+    logger.info("Ad copy   | POST %s/api/v1/ad/copy", settings.base_url)
+    logger.info("Ad image  | POST %s/api/v1/ad/image", settings.base_url)
     yield
     await get_doubao_service().aclose()
+    await get_seedream_service().aclose()
     logger.info("application shutdown")
 
 

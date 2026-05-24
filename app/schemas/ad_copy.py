@@ -21,8 +21,8 @@ class AdCopyRequest(BaseModel):
     )
     count: int = Field(default=3, ge=1, le=10, description="生成方案数量")
     model: str = Field(
-        default=settings.ark_default_model,
-        description="豆包模型 ID，默认读取环境变量 ARK_DEFAULT_MODEL",
+        default=settings.ark_text_model,
+        description="文案/对话模型 ID，默认读取环境变量 ARK_TEXT_MODEL",
         examples=["doubao-seed-2-0-lite-260428"],
     )
 

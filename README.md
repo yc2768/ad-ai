@@ -9,8 +9,10 @@ app/
 ├── api/v1/endpoints/     # 薄接口层，只调 Service
 ├── schemas/              # 请求/响应模型
 ├── services/
-│   ├── doubao.py         # 豆包底层调用（内部使用，不对外暴露）
-│   └── ad_copy.py        # 广告文案业务
+│   ├── doubao.py         # 豆包对话底层（内部）
+│   ├── seedream.py       # Seedream 图片生成底层（内部）
+│   ├── ad_copy.py        # 广告文案业务
+│   └── ad_image.py       # 广告图片提效
 ├── prompts/              # LangChain 提示词模板
 └── core/                 # 配置、日志
 ```
@@ -23,7 +25,8 @@ app/
 | `endpoints` | 接收请求 → 调用 Service → 返回 `ApiResponse`      |
 | `services`  | 业务逻辑、LangChain 组词、调用豆包                    |
 | `prompts`   | 广告领域系统提示词（LangChain `ChatPromptTemplate`） |
-| `doubao`    | 方舟 HTTP，仅供 Service 依赖                     |
+| `doubao`    | 方舟对话 API，仅供 Service 依赖                  |
+| `seedream`  | 方舟图片生成 API（Seedream 5.0 lite）            |
 
 
 ## 环境变量
@@ -31,8 +34,20 @@ app/
 ```env
 ARK_API_KEY=你的密钥
 ARK_BASE_URL=https://ark.cn-beijing.volces.com
-ARK_DEFAULT_MODEL=doubao-seed-2-0-lite-260428
+
+# 按能力分模型（控制台推理接入点 ID）
+ARK_TEXT_MODEL=doubao-seed-2-0-lite-260428      # 文案 / 对话
+ARK_IMAGE_MODEL=doubao-seedream-5-0-260128     # 图片 Seedream 5.0 lite
+ARK_VIDEO_MODEL=doubao-seedance-1-5-pro-251215 # 视频 Seedance（接口预留）
 ```
+
+| 变量 | 用途 | 默认模型系列 |
+|------|------|----------------|
+| `ARK_TEXT_MODEL` | 广告文案、对话 | 豆包 Seed 文本 |
+| `ARK_IMAGE_MODEL` | 广告主图、组图、图生图 | Seedream 5.0 lite |
+| `ARK_VIDEO_MODEL` | 广告短视频（预留） | Seedance |
+
+图片能力见 [Seedream 5.0 lite API](https://www.volcengine.com/docs/82379/1541523?lang=zh)；三类能力共用 `ARK_API_KEY`。
 
 ## 启动
 
@@ -63,7 +78,90 @@ uv run python main.py
 
 提示词里写明 **渠道：微信公众号** 时，会按订阅号推荐文结构生成（标题、短段落正文、引导点击/领券的 CTA）。
 
-`model` 默认取 `ARK_DEFAULT_MODEL`，可在请求体覆盖。
+`model` 默认取 `ARK_TEXT_MODEL`，可在请求体覆盖。
+
+### 广告图片生成（Seedream 5.0 lite）
+
+`POST /api/v1/ad/image` · 流式 `POST /api/v1/ad/image/stream`（Swagger 请求体右上角可切换广告场景示例）
+
+通过 `mode` 选择能力（对应控制台调试页签）：
+
+| mode | 能力 | 广告典型场景 |
+|------|------|----------------|
+| `text_to_image` | 文生图 | 无素材，从 Brief 出信息流主图/KV 初稿 |
+| `image_to_image` | 图生图 | 保产品/模特，换背景、换季节、换风格 |
+| `multi_fusion` | 多图融合 | 模特+服装、产品+场景合成一张 |
+| `multi_reference_group` | 多参考图生组图 | 同一品牌 VI 延展多张物料、剧情分镜组图 |
+
+可选：`web_search: true` 开启联网搜索（热点/时效海报）；`max_images` 控制组图张数（1–15，且 参考图数+生成数≤15）。
+
+**文生图 · 信息流主图**
+
+```json
+{
+  "mode": "text_to_image",
+  "prompt": "商业广告摄影，芝士莓莓茶饮，透明杯分层果泥与奶盖，明亮柔光、浅粉背景、留白加文案，竖版食欲感，无文字",
+  "size": "2K",
+  "watermark": false
+}
+```
+
+**图生图 · 换节日背景**
+
+```json
+{
+  "mode": "image_to_image",
+  "prompt": "保持产品与构图不变，背景改为春节喜庆场景，红灯笼虚化，适合电商主图",
+  "images": ["https://your-cdn.com/product.jpg"],
+  "size": "2K"
+}
+```
+
+**多图融合 · 穿搭合成**
+
+```json
+{
+  "mode": "multi_fusion",
+  "prompt": "将图1人物服装替换为图2款式，保持面部与姿态，时尚商业摄影",
+  "images": ["https://your-cdn.com/model.jpg", "https://your-cdn.com/outfit.jpg"]
+}
+```
+
+**多参考图生组图 · 品牌物料 pack**
+
+```json
+{
+  "mode": "multi_reference_group",
+  "prompt": "参考 Logo，生成户外运动品牌 GREEN 的帆布袋、帽子、会员卡、挂绳，统一绿色简约风，白底展示",
+  "images": ["https://your-cdn.com/logo.png"],
+  "max_images": 4,
+  "size": "2K"
+}
+```
+
+**联网搜索 · 热点借势**
+
+```json
+{
+  "mode": "text_to_image",
+  "prompt": "结合近期热门视觉，快消品促销海报，主视觉吸睛，预留标题区与价格条",
+  "web_search": true,
+  "size": "2K"
+}
+```
+
+响应示例：
+
+```json
+{
+  "mode": "text_to_image",
+  "created": 1710000000,
+  "images": [{ "url": "https://...", "revised_prompt": "" }],
+  "usage": { "generated_images": 1 }
+}
+```
+
+生成 URL 约 **24 小时**有效，请及时落库或转存 CDN。调试会产生真实计费，见[官方文档](https://www.volcengine.com/docs/82379/1541523?lang=zh)。
 
 响应直接返回文案数组：
 

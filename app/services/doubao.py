@@ -28,7 +28,7 @@ class DoubaoService:
             raise ValueError("ARK_API_KEY 未配置，请在 .env 中设置")
 
     def resolve_model(self, model: str | None = None) -> str:
-        return model or self._cfg.ark_default_model
+        return model or self._cfg.ark_text_model
 
     @staticmethod
     def messages_to_input(messages: list[BaseMessage]) -> list[dict[str, Any]]:
